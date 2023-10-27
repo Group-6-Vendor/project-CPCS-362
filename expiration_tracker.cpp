@@ -1,5 +1,7 @@
 // Dylan Drake
 // Expiration_tracker.cpp
+// Goal: To keep track of any products that are added, the expiration date, and if the current date is within a month away of a product expiring
+// V 0.2.0
 
 #include <iostream>
 #include <fstream>
