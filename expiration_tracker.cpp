@@ -1,128 +1,105 @@
 // Dylan Drake
-// Expiration_tracker.cpp
-// Goal: To keep track of any products that are added, the expiration date, and if the current date is within a month away of a product expiring
-// V 0.2.0
+
+
+// main.cpp
 
 #include <iostream>
-#include <fstream>
-#include <string>
-#include <map>
+#include <cstdlib>                      // For system("clear") or system("cls") to clear the console
+#include "expire_tracker.cpp"
+#include "add_items.cpp"
+#include "delete_items.cpp"
+#include "clear_items.cpp"
 
-using namespace std;
+//using namespace std           // not needed...for now
 
-// Function to load data from the file into a map
-void loadItemsFromFile(map<string, string>& items) {
-    ifstream file("expiration_tracker.txt");            // Store into file for user to read
-    if (file.is_open()) {                               // File open here! Remember to close later!!
-        string line;
-        while (getline(file, line)) {
-            size_t pos = line.find(':');
-            if (pos != string::npos) 
-            {
-                string name = line.substr(0, pos);
-                string expirationDate = line.substr(pos + 1);
-                items[name] = expirationDate;
-            }
-        }
-        file.close();
+
+// Function to handle expired items
+void handleExpiredItems(const std::string& machineID) {
+
+    std::vector<VendingMachineItem> expiringItems = expire_tracker(machineID);   // Call the expire_tracker() function
+
+    // Get the current date
+    auto now = std::chrono::system_clock::now();
+
+    std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
+
+    clearConsole();
+    
+    std::cout << "Expiring Items within 30 days:" << std::endl;
+    
+    for (const auto& item : expiringItems) {
+        std::cout << "Name: " << item.name << " | Location: " << item.location
+                  << " | Expiration Date: " << item.expirationDate << std::endl;
     }
+
+    // Wait for user input before returning to the menu
+    std::cout << "\nPress Enter to return to the main menu...";
+
+    std::cin.ignore(); std::cin.get();    
 }
 
-// Function to save the map to the file
-void saveItemsToFile(const map<string, string>& items) {
-    ofstream file("expiration_tracker.txt");
-    if (file.is_open()) {
-        for (const auto& item : items) {
-            file << item.first << ":" << item.second << "\n";
-        }
-        file.close();
-    }
-}
-
-// Function to remove a product by name
-void removeProduct(map<string, string>& items, const string& productName) {
-    auto it = items.find(productName);
-    if (it != items.end()) {
-        items.erase(it);
-    }
-}
 
 int main() {
-    map<string, string> items;
-
-    // Load existing data from the file
-    loadItemsFromFile(items);
-
     int choice;
+    std::string machineID;  // Store vending machine #
 
-    // Loop until program exits(4) or user CRT+C
-    while (true) {
-        cout << "Main Menu:\n";
-        cout << "1. Check expired items\n";
-        cout << "2. Add item expiration date\n";
-        cout << "3. Remove product\n";
-        cout << "4. Exit\n";
-        cout << "Enter your choice: ";
-        cin >> choice;
+    do {
+        clearConsole();
+        // Display the menu
+        std::cout << "Vending Machine Management System\n"
+                  << "1. Enter Vending Machine ID Number\n"
+                  << "2. Add Items\n"
+                  << "3. Delete Items\n"
+                  << "4. Expired Checker\n"
+                  << "5. Clear Expired List\n"
+                  << "6. Quit\n\n";
 
-        if (choice == 1) {
-            // Check expired items
-            cout << "\nStored Items and Expiration Dates:\n";
-            for (const auto& item : items) {
-                cout << item.first << ": " << item.second << endl;
-            }
-        } 
-        else if (choice == 2) 
-        {
-            // Add item expiration date
-            string name;
-            string expirationDate;
-
-            cout << "Please enter the item name: ";
-            cin >> name;
-
-            if (name == "9999") {
-                break; // Exit the program if "9999" is entered.
-            }
-
-            cout << "Please enter the expiration date (YYYY-MM) for this batch: ";
-            cin >> expirationDate;
-
-            // Store the item and its expiration date in the map
-            items[name] = expirationDate;
-
-            // Display stored items and their expiration dates
-            cout << "\nStored Items and Expiration Dates:\n";
-            for (const auto& item : items) {
-                cout << item.first << ": " << item.second << endl;
-            }
-
-            // Save the map to the file
-            saveItemsToFile(items);
-        } 
-        else if (choice == 3) 
-        {
-            // Remove product
-            string productName;
-            // Ask user which product to remove
-            cout << "Enter the name of the product you want to remove: ";
-            // Store name into "productName"
-            cin >> productName;
-
-            removeProduct(items, productName);
-            saveItemsToFile(items);
-
-            // Let user know product was removed successfully
-            cout << "Product '" << productName << "' was successfully removed!\n";
-        } else if (choice == 4) 
-        {
-            break; // Exit the program
+        // If the vending machine number is not set, prompt the user to enter it
+        if (machineID.empty()) {
+            std::cout << "Enter Vending Machine ID Number: ";
+            std::cin >> machineID;
         }
-         else 
-         {
-            cout << "Invalid choice. Please select a valid option and try again.\n";
-         }
-    }
 
-    return 0; // Return 0 for Success!
+        std::cout << "Current Vending Machine ID: " << machineID << "\n\n";
+
+        // Display additional menu options based on whether a vending machine number is set
+        std::cout << "Enter your choice (";
+        if (!machineID.empty()) {
+            std::cout << "2-6 or ";
+        }
+        std::cout << "1 to change vending machine): ";
+
+        // Get user input for the menu choice
+        std::cin >> choice;
+
+        // Perform actions based on the user's choice
+        switch (choice) {
+            case 1:
+                // Prompt the user to enter the vending machine number
+                std::cout << "Enter Vending Machine ID Number: ";
+                // User entering number for choice
+                std::cin >> machineID;
+                break;
+            case 2:
+                addItems(machineID);
+                break;
+            case 3:
+              deleteItems(machineID);
+                 break;
+            case 4:
+              handleExpiredItems(machineID);
+              break;
+            case 5:
+               clearItems();
+                break;
+            case 6:
+                std::cout << "Exiting the program. Goodbye!\n";
+                break;
+
+            default:        // If a choice is invalid, this will trigger below!
+                std::cout << "Invalid choice. Please enter a number between 1 and 6.\n";
+        }
+    } while (choice != 6);   // If "6", then we exit program
+
+    return 0;
 }
