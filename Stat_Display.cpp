@@ -13,6 +13,7 @@ public:
         prices = initialPrices;
     }
 
+
     // Display the current inventory and prices
     void displayStatistics() const {
         std::cout << "Current Statistics:\n";
