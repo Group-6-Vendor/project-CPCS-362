@@ -1,72 +1,72 @@
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+#include <iostream>
+#include <map>
+#include <string>
+#include <sstream>
 
-class VendingMachine:
-    def __init__(self, sender_email, sender_password):
-        # Initialize the vending machine with some items and stock levels
-        self.items = {
-            "Item A": 10,
-            "Item B": 8,
-            "Item C": 15,
+class VendingMachine {
+public:
+    VendingMachine(const std::string& sender_email, const std::string& sender_password)
+        : sender_email(sender_email), sender_password(sender_password) {
+        // Initialize the vending machine with some items and stock levels
+        items = {
+            {"Item A", 10},
+            {"Item B", 8},
+            {"Item C", 15},
+        };
+    }
+
+    void sendStatusReport(const std::string& manager_email, const std::string& subject, const std::string& message) {
+        // Simulate sending an email by printing to the console
+        std::cout << "Sending email to: " << manager_email << std::endl;
+        std::cout << "Subject: " << subject << std::endl;
+        std::cout << "Message: " << message << std::endl;
+    }
+
+    void reportStatus(const std::string& manager_email) {
+        // Generate a status report message
+        std::stringstream status_report;
+        status_report << "Vending Machine Status Report:\n\n";
+        for (const auto& [item, stock] : items) {
+            status_report << item << ": " << stock << " available\n";
         }
-        self.sender_email = sender_email
-        self.sender_password = sender_password
 
-    def send_status_report(self, manager_email, subject, message):
-        # Create the email message
-        msg = MIMEMultipart()
-        msg["From"] = self.sender_email
-        msg["To"] = manager_email
-        msg["Subject"] = subject
-        msg.attach(MIMEText(message, "plain"))
+        // Send the status report via email
+        std::string subject = "Vending Machine Status Report";
+        sendStatusReport(manager_email, subject, status_report.str());
+    }
 
-        try:
-            # Connect to the SMTP server (Gmail in this example)
-            server = smtplib.SMTP("smtp.gmail.com", 587)
-            server.starttls()
-            server.login(self.sender_email, self.sender_password)
+    void restockItem(const std::string& item, int quantity) {
+        // Restock a specific item with the given quantity
+        auto it = items.find(item);
+        if (it != items.end()) {
+            it->second += quantity;
+        } else {
+            std::cout << "Item needs to be restocked in the vending machine." << std::endl;
+        }
+    }
 
-            # Send the email
-            server.sendmail(self.sender_email, manager_email, msg.as_string())
+private:
+    std::string sender_email;
+    std::string sender_password;
+    std::map<std::string, int> items;
+};
 
-            # Close the connection
-            server.quit()
+int main() {
+    // Replace with your email and password
+    std::string sender_email = "your_email_address";
+    std::string sender_password = "your_password";
 
-            print("Status report sent successfully!")
-        except smtplib.SMTPException as e:
-            print("Failed to send status report: ", str(e))
+    VendingMachine vending_machine(sender_email, sender_password);
+    std::string manager_email = "manager_email_address";  // Replace with the manager's email
 
-    def report_status(self, manager_email):
-        # Generate a status report message
-        status_report = "Vending Machine Status Report:\n\n"
-        for item, stock in self.items.items():
-            status_report += f"{item}: {stock} available\n"
+    // Report the initial status
+    vending_machine.reportStatus(manager_email);
 
-        # Send the status report via email
-        subject = "Vending Machine Status Report"
-        self.send_status_report(manager_email, subject, status_report)
+    // Restock an item (e.g., Item A with 5 more units)
+    vending_machine.restockItem("Item A", 5);
 
-    def restock_item(self, item, quantity):
-        # Restock a specific item with the given quantity
-        if item in self.items:
-            self.items[item] += quantity
-        else:
-            print("Item needs to be restocked in the vending machine.")
+    // Report the updated status
+    vending_machine.reportStatus(manager_email);
 
-# Example usage
-# Replace with your email and password
-sender_email = "your_email_address"
-sender_password = "your_password"
-
-vending_machine = VendingMachine(sender_email, sender_password)
-manager_email = "manager_email_address"  # Replace with the manager's email
-
-# Report the initial status
-vending_machine.report_status(manager_email)
-
-# Restock an item (e.g., Item A with 5 more units)
-vending_machine.restock_item("Item A", 5)
-
-# Report the updated status
-vending_machine.report_status(manager_email)
+    return 0;
+}
