@@ -1,5 +1,6 @@
 #include <iostream>
 #include <map>
+#include <sstream>
 #include <ctime>
 
 class ItemScanner {
@@ -33,12 +34,11 @@ std::pair<std::string, std::string> getItem(int selected_item) {
     }
 }
 
-void purchase(const std::string& item_name) {
-    std::map<std::string, std::map<std::string, std::string>>& inventory = ItemScanner::inventory;
-
-    if (inventory.find(item_name) != inventory.end() && std::stoi(inventory[item_name]["quantity"]) > 0) {
+void purchase(const std::string& item_name, std::map<std::string, std::map<std::string, std::string>>& inventory) {
+    auto it = inventory.find(item_name);
+    if (it != inventory.end() && std::stoi(it->second["quantity"]) > 0) {
         std::cout << "Purchase of one " << item_name << " confirmed." << std::endl;
-        inventory[item_name]["quantity"] = std::to_string(std::stoi(inventory[item_name]["quantity"]) - 1);
+        it->second["quantity"] = std::to_string(std::stoi(it->second["quantity"]) - 1);
     } else {
         std::cout << "This item is out of stock." << std::endl;
     }
@@ -50,6 +50,12 @@ int main() {
             int selected_item;
             std::cout << "Enter the number of your selection (1-40) (use 0 to quit): ";
             std::cin >> selected_item;
+
+            if (std::cin.fail()) {
+                std::cin.clear();
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                throw std::invalid_argument("Invalid input. Please enter a valid number.");
+            }
 
             if (selected_item == 0) {
                 break;
@@ -72,7 +78,7 @@ int main() {
                     if (confirm == 'n') {
                         std::cout << "Purchase cancelled." << std::endl;
                     } else if (confirm == 'y') {
-                        purchase(item_name);
+                        purchase(item_name, ItemScanner::inventory);
                     } else {
                         std::cout << "Invalid answer." << std::endl;
                     }
@@ -81,7 +87,7 @@ int main() {
                 std::cout << "Invalid selection." << std::endl;
             }
         } catch (const std::exception& e) {
-            std::cerr << "Invalid input." << std::endl;
+            std::cerr << e.what() << std::endl;
         }
     }
 
