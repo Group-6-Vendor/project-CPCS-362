@@ -13,25 +13,29 @@ public:
         prices = initialPrices;
     }
 
-
     // Display the current inventory and prices
     void displayStatistics() const {
         std::cout << "Current Statistics:\n";
         std::cout << "-------------------\n";
         for (const auto& item : inventory) {
-            std::cout << "Item: " << item.first << "\tQuantity: " << item.second << "\tPrice: $" << prices[item.first] << "\n";
+            std::cout << "Item: " << item.first << "\tQuantity: " << item.second << "\tPrice: $" << prices.at(item.first) << "\n";
         }
         std::cout << "-------------------\n";
     }
 
     // Simulate a purchase
     bool purchaseItem(const std::string& itemName, double amountPaid) {
-        if (inventory.find(itemName) != inventory.end() && inventory[itemName] > 0 && amountPaid >= prices[itemName]) {
-            std::cout << "Dispensing " << itemName << ". Thank you for your purchase!\n";
-            inventory[itemName]--;
-            return true;
+        if (inventory.find(itemName) != inventory.end() && inventory[itemName] > 0) {
+            if (amountPaid >= prices.at(itemName)) {
+                std::cout << "Dispensing " << itemName << ". Thank you for your purchase!\n";
+                inventory[itemName]--;
+                return true;
+            } else {
+                std::cout << "Failed to purchase " << itemName << ". Insufficient funds.\n";
+                return false;
+            }
         } else {
-            std::cout << "Failed to purchase " << itemName << ". Insufficient quantity or funds.\n";
+            std::cout << "Failed to purchase " << itemName << ". Item not available.\n";
             return false;
         }
     }
