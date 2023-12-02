@@ -1,53 +1,89 @@
-import datetime
-from item_scanner import inventory
+#include <iostream>
+#include <map>
+#include <ctime>
 
-def expired(expiration_date):
-    today = datetime.date.today()
-    exp_date = datetime.datetime.strptime(expiration_date, "%Y-%m-%d").date()
-    return exp_date < today
+class ItemScanner {
+public:
+    static std::map<std::string, std::map<std::string, std::string>> inventory;
+};
 
-def get_item(selected_item):
-    items = list(inventory.keys())
-    if 1 <= selected_item <= len(items):
-        item_name = items[selected_item - 1]
-        expiration_date = inventory[item_name]["expiration_date"]
-        return item_name, expiration_date
-    else:
-        return None
+bool expired(const std::string& expiration_date) {
+    std::time_t today_time = std::time(nullptr);
+    std::tm* today = std::localtime(&today_time);
 
-def confirm_purchase(item_name):
-    confirm = input(f"Would you like to purchase one {item_name} (y or n)? ").lower()
-    if confirm == "n":
-        print("Purchase cancelled.")
-        return False
-    elif confirm == "y":
-        return True
-    else:
-        print("Invalid answer. Please enter 'y' or 'n'.")
-        return confirm_purchase(item_name)
+    std::tm exp_date = {};
+    std::istringstream(expiration_date) >> std::get_time(&exp_date, "%Y-%m-%d");
 
-def purchase(item_name):
-    if item_name in inventory and inventory[item_name]["quantity"] > 0:
-        print(f"Purchase of one {item_name} confirmed.")
-        inventory[item_name]["quantity"] -= 1
-    else:
-        print("This item is out of stock.")
+    return std::mktime(today) > std::mktime(&exp_date);
+}
 
-while True:
-    try:
-        selected_item = int(input("Enter the number of your selection (1-40) (use 0 to quit): "))
-        if selected_item == 0:
-            break
-        selection = get_item(selected_item)
-        if selection:
-            item_name, expiration_date = selection
-            print(f"You have selected: {item_name}")
-            if expired(expiration_date):
-                print("This item is expired.")
-            else:
-                if confirm_purchase(item_name):
-                    purchase(item_name)
-        else:
-            print("Invalid selection.")
-    except ValueError:
-        print("Invalid input.")
+std::pair<std::string, std::string> getItem(int selected_item) {
+    std::map<std::string, std::map<std::string, std::string>> items = ItemScanner::inventory;
+
+    if (selected_item >= 1 && selected_item <= items.size()) {
+        auto it = items.begin();
+        std::advance(it, selected_item - 1);
+
+        const std::string& item_name = it->first;
+        const std::string& expiration_date = it->second["expiration_date"];
+
+        return std::make_pair(item_name, expiration_date);
+    } else {
+        return std::make_pair("", "");
+    }
+}
+
+void purchase(const std::string& item_name) {
+    std::map<std::string, std::map<std::string, std::string>>& inventory = ItemScanner::inventory;
+
+    if (inventory.find(item_name) != inventory.end() && std::stoi(inventory[item_name]["quantity"]) > 0) {
+        std::cout << "Purchase of one " << item_name << " confirmed." << std::endl;
+        inventory[item_name]["quantity"] = std::to_string(std::stoi(inventory[item_name]["quantity"]) - 1);
+    } else {
+        std::cout << "This item is out of stock." << std::endl;
+    }
+}
+
+int main() {
+    while (true) {
+        try {
+            int selected_item;
+            std::cout << "Enter the number of your selection (1-40) (use 0 to quit): ";
+            std::cin >> selected_item;
+
+            if (selected_item == 0) {
+                break;
+            }
+
+            auto selection = getItem(selected_item);
+            if (!selection.first.empty()) {
+                const std::string& item_name = selection.first;
+                const std::string& expiration_date = selection.second;
+
+                std::cout << "You have selected: " << item_name << std::endl;
+
+                if (expired(expiration_date)) {
+                    std::cout << "This item is expired." << std::endl;
+                } else {
+                    char confirm;
+                    std::cout << "Would you like to purchase this item (y or n)? ";
+                    std::cin >> confirm;
+
+                    if (confirm == 'n') {
+                        std::cout << "Purchase cancelled." << std::endl;
+                    } else if (confirm == 'y') {
+                        purchase(item_name);
+                    } else {
+                        std::cout << "Invalid answer." << std::endl;
+                    }
+                }
+            } else {
+                std::cout << "Invalid selection." << std::endl;
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "Invalid input." << std::endl;
+        }
+    }
+
+    return 0;
+}
